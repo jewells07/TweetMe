@@ -41,14 +41,23 @@
         xhr.setRequestHeader("HTTP_X_REQUESTED_WITH", "XMLHttpRequest")
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest")
         xhr.onload = function () {
-            if(xhr.status === 201){
+            if (xhr.status === 201) {
                 const newTweetJson = xhr.response
                 const newTweetElement = formatTweetElement(newTweetJson)
                 const ogHtml = tweetsContainerElement.innerHTML
                 tweetsContainerElement.innerHTML = newTweetElement + ogHtml
                 myForm.reset()
-                
             }
+            else if (xhr.status === 400) {
+                const errorJson = xhr.response
+                console.log(errorJson);
+            }
+            else if (xhr.status === 500) {
+                alert("There was a server error, Please Try Again.")
+            }
+        }
+        xhr.onerror = function () {
+            alert("An error occurred. Please try again later.")
         }
         xhr.send(myFormData)
 
