@@ -11,16 +11,21 @@ from .models import Tweet
 ALLOWED_HOSTS = settings.ALLOWED_HOSTS
 
 def home_view(request, *args, **kwargs):
-    # return HttpResponse("<h1>Hello world</h1>")
     return render(request, 'pages/home.html', context={}, status=200)
 
 def tweet_create_view(request, *args, **kwargs):
-    
+    user = request.user
+    if not request.user.is_authenticated:
+        user = None
+        if request.is_ajax():
+            return JsonResponse({}, status=401)
+        return redirect(settings.LOGIN_URL)
     form = TweetForm(request.POST or None)
     next_url = request.POST.get("next") or None
     if form.is_valid():
         obj = form.save(commit=False)
         # Do other form related logic
+        obj.user = user
         obj.save()
         if request.is_ajax():
             return JsonResponse(obj.serialize(), status=201) # 201 == Created a Items
