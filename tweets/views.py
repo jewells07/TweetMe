@@ -12,30 +12,31 @@ from .forms import TweetForm
 from .models import Tweet
 from .serializers import TweetSerializer, TweetActionSerializer
 
-# Create your views here.
 ALLOWED_HOSTS = settings.ALLOWED_HOSTS
 
+# Create your views here.
 def home_view(request, *args, **kwargs):
-    return render(request, 'pages/home.html', context={}, status=200)
+    username = None
+    if request.user.is_authenticated:
+        username = request.user.username
+    return render(request, "pages/home.html", context={"username": username}, status=200)
 
 
 @api_view(['POST']) # http method the client == POST
-# @authentication_classes([SessionAuthentication, MyCoustomAuth])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication, MyCustomAuth])
+@permission_classes([IsAuthenticated]) # REST API course
 def tweet_create_view(request, *args, **kwargs):
     serializer = TweetSerializer(data=request.POST)
     if serializer.is_valid(raise_exception=True):
-        serializer.save(user = request.user)
+        serializer.save(user=request.user)
         return Response(serializer.data, status=201)
     return Response({}, status=400)
 
-
 @api_view(['GET'])
 def tweet_detail_view(request, tweet_id, *args, **kwargs):
-    qs = Tweet.objects.filter(id = tweet_id)
+    qs = Tweet.objects.filter(id=tweet_id)
     if not qs.exists():
         return Response({}, status=404)
-    
     obj = qs.first()
     serializer = TweetSerializer(obj)
     return Response(serializer.data, status=200)
@@ -43,51 +44,49 @@ def tweet_detail_view(request, tweet_id, *args, **kwargs):
 @api_view(['DELETE', 'POST'])
 @permission_classes([IsAuthenticated])
 def tweet_delete_view(request, tweet_id, *args, **kwargs):
-    qs = Tweet.objects.filter(id = tweet_id)
+    qs = Tweet.objects.filter(id=tweet_id)
     if not qs.exists():
         return Response({}, status=404)
-    
-    qs = qs.filter(user = request.user)
-
+    qs = qs.filter(user=request.user)
     if not qs.exists():
-        return Response({"message" : "You cannot delete this tweet"}, status=401)
-
+        return Response({"message": "You cannot delete this tweet"}, status=401)
     obj = qs.first()
     obj.delete()
-    return Response({"message" : "Tweet Removed"}, status=200)
+    return Response({"message": "Tweet removed"}, status=200)
 
-@api_view([ 'POST'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def tweet_action_view(request, *args, **kwargs):
     '''
     id is required.
     Action options are: like, unlike, retweet
     '''
-    serializer = TweetActionSerializer(data=request.POST)
+    serializer = TweetActionSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         data = serializer.validated_data
         tweet_id = data.get("id")
         action = data.get("action")
-        qs = Tweet.objects.filter(id = tweet_id)
-
+        qs = Tweet.objects.filter(id=tweet_id)
         if not qs.exists():
             return Response({}, status=404)
         obj = qs.first()
         if action == "like":
             obj.likes.add(request.user)
+            serializer = TweetSerializer(obj)
+            return Response(serializer.data, status=200)
         elif action == "unlike":
             obj.likes.remove(request.user)
         elif action == "retweet":
             # this is todo
             pass
+    return Response({}, status=200)
 
-    return Response({"message" : "Tweet Removed"}, status=200)
 
 @api_view(['GET'])
 def tweet_list_view(request, *args, **kwargs):
     qs = Tweet.objects.all()
     serializer = TweetSerializer(qs, many=True)
-    return Response(serializer.data)
+    return Response(serializer.data, status=200)
 
 
 
@@ -105,54 +104,49 @@ def tweet_create_view_pure_django(request, *args, **kwargs):
     next_url = request.POST.get("next") or None
     if form.is_valid():
         obj = form.save(commit=False)
-        # Do other form related logic
+        # do other form related logic
         obj.user = user
         obj.save()
         if request.is_ajax():
-            return JsonResponse(obj.serialize(), status=201) # 201 == Created a Items
-
+            return JsonResponse(obj.serialize(), status=201) # 201 == created items
         if next_url != None and is_safe_url(next_url, ALLOWED_HOSTS):
             return redirect(next_url)
         form = TweetForm()
-
     if form.errors:
         if request.is_ajax():
             return JsonResponse(form.errors, status=400)
-    return render(request, 'components/form.html', context={"form" : form})
+    return render(request, 'components/form.html', context={"form": form})
 
 
 def tweet_list_view_pure_django(request, *args, **kwargs):
     """
     REST API VIEW
-    Consume by Javascript or Swift or Java/iOS/Android etc..
+    Consume by JavaScript or Swift/Java/iOS/Andriod
     return json data
     """
-
     qs = Tweet.objects.all()
-    tweets_list = [ x.serialize() for x in qs]
+    tweets_list = [x.serialize() for x in qs]
     data = {
-        "isUser" : False,
+        "isUser": False,
         "response": tweets_list
     }
     return JsonResponse(data)
-    
+
+
 def tweet_detail_view_pure_django(request, tweet_id, *args, **kwargs):
     """
     REST API VIEW
-    Consume by Javascript or Swift or Java/iOS/Android etc..
+    Consume by JavaScript or Swift/Java/iOS/Andriod
     return json data
     """
-    data ={
-        "id": tweet_id
+    data = {
+        "id": tweet_id,
     }
-    status=200
+    status = 200
     try:
         obj = Tweet.objects.get(id=tweet_id)
         data['content'] = obj.content
     except:
-        data['message']= "Not found"
+        data['message'] = "Not found"
         status = 404
-        
-    
-
     return JsonResponse(data, status=status) # json.dumps content_type='application/json'
