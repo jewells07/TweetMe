@@ -7,15 +7,15 @@
 <div class="row text-center">
     <div class="col">
         <h1>Welcome to Tweetme 2</h1>
-        </div>
+    </div>
 </div>
 
 <div class="row mb-3">
     <div class="col-md-4 mx-auto col-10">
-        <form class="form" id='tweet-create-form' method='POST' action='/create-tweet'> 
-        {% csrf_token %}
+        <form class="form" id='tweet-create-form' method='POST' action='/create-tweet'>
+            {% csrf_token %}
             <input type="hidden" value='/' name='next' />
-            <textarea class="form-control" name="content" placeholder='Your Tweet...' ></textarea>
+            <textarea class="form-control" name="content" placeholder='Your Tweet...'></textarea>
             <button type="submit" class="btn btn-primary">Tweet</button>
         </form>
     </div>
@@ -30,8 +30,20 @@
 
     function handleTweetCreateFormDidSubmit(event) {
         event.preventDefault()
-        console.log(event);
-        
+        const myForm = event.target
+        const myFormData = new FormData(myForm)
+        const url = myForm.getAttribute("action")
+        const method = myForm.getAttribute("method")
+        const xhr = new XMLHttpRequest()
+        xhr.open(method, url)
+        xhr.onload = function () {
+            const serverResponse = xhr.response
+            // console.log(serverResponse);
+            const tweetsEl = document.getElementById("tweets")
+            loadTweets(tweetsEl)
+        }
+        xhr.send(myFormData)
+
     }
 
     const tweetCreateFormEl = document.getElementById("tweet-create-form")
@@ -79,7 +91,7 @@
             "</div></div>"
         return formattedTweet
     }
-    
+
 
 </script>
 
