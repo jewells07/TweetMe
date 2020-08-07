@@ -79,6 +79,10 @@
                 }
 
             }
+            else if (xhr.status === 401) {
+                alert("You Must Login!")
+                window.location.href = "/login"
+            }
             else if (xhr.status === 500) {
                 alert("There was a server error, Please Try Again.")
             }
