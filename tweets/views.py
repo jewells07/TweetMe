@@ -63,13 +63,13 @@ def tweet_action_view(request, *args, **kwargs):
     id is required.
     Action options are: like, unlike, retweet
     '''
-    serializer = TweetActionSerializer(request.POST)
+    serializer = TweetActionSerializer(data=request.POST)
     if serializer.is_valid(raise_exception=True):
         data = serializer.validated_data
         tweet_id = data.get("id")
         action = data.get("action")
         qs = Tweet.objects.filter(id = tweet_id)
-        
+
         if not qs.exists():
             return Response({}, status=404)
         obj = qs.first()
