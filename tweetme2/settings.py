@@ -25,7 +25,7 @@ SECRET_KEY = 'f!14_^ur0v!3j!qhm3w(i=oh%_-994c_hzg_d4cp&*v02y7p80'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', "localhost"]
 LOGIN_URL = "/login"
 
 TWEET_ACTION_OPTIONS = ["like", "unlike", "retweet"]
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # third party
     'rest_framework',
+    'corsheaders',
     #internal
     'tweets',
 ]
@@ -49,6 +50,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -126,6 +130,19 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# CORS_ORIGIN_WHITELIST = [
+#     "https://example.com",
+#     "https://sub.example.com",
+#     "http://localhost:8080",
+#     "http://127.0.0.1:9000"
+# ]
+
+# CORS_ORIGIN_REGEX_WHITELIST = [
+#     r"^https://\w+\.example\.com$",
+# ]
+
+CORS_ORIGIN_ALLOW_ALL = True # any website has access to my api
+CORS_URLS_REGEX = r'^/api/.*$'
 
 DEFAULT_RENDERER_CLASSES = [
         'rest_framework.renderers.JSONRenderer',
