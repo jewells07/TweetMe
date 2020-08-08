@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { loadTweets } from '../lookup';
+import { loadTweets, createTweet } from '../lookup';
 
 export function TweetsComponent(props) {
   const textAreaRef = React.createRef();
@@ -11,11 +11,15 @@ export function TweetsComponent(props) {
     let tempNewTweets = [...newTweets];
     // change this to a server side call
     // unshift -> Add at beginning , push -> Add at end
-    tempNewTweets.unshift({
-      content: newVal,
-      likes: 0,
-      id: 12313,
+    createTweet(newVal, (response, status) => {
+      if (status === 201) {
+        tempNewTweets.unshift(response);
+      }else{
+        console.log(response);
+        alert("An Error Occured Please Try Again.")
+      }
     });
+
     setNewTweets(tempNewTweets);
     textAreaRef.current.value = '';
   };
@@ -55,7 +59,7 @@ export function TweetsList(props) {
       const myCallback = (response, status) => {
         if (status === 200) {
           setTweetsInit(response);
-          setTweetsDidSet(true)
+          setTweetsDidSet(true);
         } else {
           alert('There was an error');
         }
